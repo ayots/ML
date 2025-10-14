@@ -1,0 +1,74 @@
+#Import essential libraries for data handling, visualization, and machine learning
+import pandas as pd                      # For data manipulation
+import numpy as np                       # For numerical operations
+import matplotlib.pyplot as plt          # For plotting graphs
+import seaborn as sns                    # For enhanced visualizations
+from sklearn.linear_model import LinearRegression         # For building the regression model
+from sklearn.model_selection import train_test_split      # For splitting data into training and testing sets
+from sklearn.metrics import mean_squared_error, r2_score  # For evaluating model performance
+
+#Load the dataset from a CSV file
+df = pd.read_csv('salary_data.csv')
+
+#Display the column names to verify structure and catch formatting issues
+print("Columns in dataset:", df.columns)
+
+#Clean column names by stripping leading/trailing spaces (helps avoid KeyErrors)
+df.columns = df.columns.str.strip()
+
+#Check for missing values in each column
+print("Missing values:\n", df.isnull().sum())
+
+#Drop rows with missing values in key columns to avoid errors during model training
+df.dropna(subset=['Years of Experience', 'Salary'], inplace=True)
+
+# 📊 Visualize the relationship between Years of Experience and Salary
+sns.scatterplot(x='Years of Experience', y='Salary', data=df)
+plt.title("Years of Experience vs Salary")
+plt.xlabel("Years of Experience")
+plt.ylabel("Salary (£)")
+plt.show()
+
+#Define feature (X) and target (y) variables for the regression model
+X = df[['Years of Experience']]  # Independent variable
+y = df['Salary']                 # Dependent variable
+
+#Split the data into training and testing sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+#Create and train the linear regression model using the training data
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# 📈 Print the model parameters: intercept and slope (coefficient)
+print("Intercept:", model.intercept_)
+print("Slope:", model.coef_[0])
+
+#Predict salary values for the test set
+y_pred = model.predict(X_test)
+
+#Compare actual vs predicted salaries in a DataFrame
+comparison = pd.DataFrame({'Actual': y_test, 'Predicted': y_pred})
+print("\nPrediction Comparison:\n", comparison)
+
+#Evaluate model performance using Mean Squared Error and R-squared score
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+print("Mean Squared Error:", mse)
+print("R-squared:", r2)
+
+#Plot the regression line over the training data
+plt.scatter(X_train, y_train, color='blue', label='Training data')
+plt.plot(X_train, model.predict(X_train), color='red', label='Regression line')
+plt.title("Linear Regression Fit")
+plt.xlabel("Years of Experience")
+plt.ylabel("Salary (£)")
+plt.legend()
+plt.show()
+
+#Plot the distribution of residuals (errors between actual and predicted values)
+residuals = y_test - y_pred
+sns.histplot(residuals, kde=True)
+plt.title("Residuals Distribution")
+plt.xlabel("Residuals")
+plt.show()
